@@ -1,0 +1,234 @@
+# uncomment this line to enable zsh startup profiling, then run `zprof`
+# zmodload zsh/zprof
+
+# OS_NAME='macOS'
+OS_NAME='debian'
+
+### OS-specific ###
+case "$OS_NAME" in
+    macOS)
+        alias t='tree -C --dirsfirst -I "coverage|build|dist|*srv|elm-stuff|_build|*.byte|*.native|__pycache__|static|target" '
+        alias ls='ls -G'
+        alias l='ls -lhp'
+        alias grep='grep --color=auto'
+        alias v='vagrant'
+
+        # ps_os_color="$(tput setab 3)$(tput setaf 0)"
+        # ps_color="$(tput setab 5)$(tput setaf 0)"
+        ;;
+
+    debian)
+        alias t='tree -C --dirsfirst -I "coverage|build|dist|*srv|elm-stuff|_build|*.byte|*.native|__pycache__|static|target" '
+        alias ls='ls --color'
+        alias l='ls -lhp'
+        alias grep='grep --color=auto'
+
+        # ps_os_color="$(tput setab 6)$(tput setaf 0)"
+        # ps_color="$(tput setab 1)$(tput setaf 0)"
+        ;;
+esac
+
+### Completion ###
+setopt COMPLETE_IN_WORD
+autoload -U compinit
+compinit
+zstyle ':completion::complete:*' use-cache 1
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' # case insensitive completion
+
+
+### Colors ###
+export CLICOLOR=1
+autoload colors
+colors
+
+
+### History ###
+export HISTFILE=$HOME/.zsh_history
+export HISTSIZE=10000
+export SAVEHIST=10000
+setopt EXTENDED_HISTORY     # add timestamps to history
+setopt APPEND_HISTORY       # adds history
+setopt INC_APPEND_HISTORY   # adds history incrementally
+setopt SHARE_HISTORY        # share across sessions
+setopt HIST_IGNORE_ALL_DUPS # don't record dupes in history
+setopt HIST_IGNORE_DUPS
+setopt HIST_REDUCE_BLANKS
+
+
+### Settings ###
+unsetopt correct_all
+bindkey -e                           # use emacs key bindings
+bindkey '^[[Z' reverse-menu-complete # shift-tab to cycle backwards
+
+autoload -U select-word-style
+select-word-style bash
+
+bindkey '^p' yank
+bindkey '^g' send-break
+bindkey '^u' undo
+
+setopt LOCAL_OPTIONS # allow functions to have local options
+setopt LOCAL_TRAPS   # allow functions to have local traps
+setopt PROMPT_SUBST
+unsetopt AUTO_CD
+setopt RC_QUOTES     # 'allow ''single'' quote interpolation'
+stty -ixon -ixoff    # disable scroll lock
+export EDITOR=vim
+set -o emacs
+
+
+### Helper functions ###
+function is_set() {
+    [[ -n $1 ]]
+}
+
+function is_unset() {
+    [[ -z $1 ]]
+}
+
+function file_exists() {
+    [[ -f $1 ]]
+}
+
+function matches_regex() {
+    [[ $1 =~ $2 ]]
+}
+
+
+### Custom history ###
+CUSTOM_HISTFILE=~/env/zsh/history/current
+CUSTOM_HISTDIR=~/env/zsh/history/
+
+if file_exists "$CUSTOM_HISTFILE"; then
+    ENABLE_CUSTOM_HISTORY=1
+fi
+
+function set_up_custom_history() {
+    mkdir -p $CUSTOM_HISTDIR
+    touch $CUSTOM_HISTFILE
+}
+
+function custom_histfile_too_long() {
+    [[ $(cat $CUSTOM_HISTFILE | wc -l) -gt 5000 ]]
+}
+
+function log_commands() {
+    if is_set "$ENABLE_CUSTOM_HISTORY"; then
+        if custom_histfile_too_long; then
+            echo "logging ${CUSTOM_HISTFILE}"
+            mv $CUSTOM_HISTFILE $CUSTOM_HISTDIR/$(date +%Y_%m_%d)
+            touch $CUSTOM_HISTFILE
+        fi
+        echo "$(date '+%Y-%m-%d\t%H:%M:%S')\t$(pwd)\t$1" >> $CUSTOM_HISTFILE
+    fi
+}
+
+if [[ ! "$preexec_functions" == *log_commands* ]]; then
+    preexec_functions+=("log_commands")
+fi
+
+function dont_log_that() {
+    if is_set "$ENABLE_CUSTOM_HISTORY"; then
+        unset ENABLE_CUSTOM_HISTORY
+        echo -e '$d\n$d\nwq' | ed $CUSTOM_HISTFILE # deletes last two lines (one is `unset ENABLE_CUSTOM_HISTORY`)
+        export ENABLE_CUSTOM_HISTORY=1
+    else
+        echo "ENABLE_CUSTOM_HISTORY is not set"
+    fi
+}
+
+
+### Prompt ###
+
+# txtblk='\e[0;30m' # Black - Regular
+# txtred='\e[0;31m' # Red
+# txtgrn='\e[0;32m' # Green
+# txtylw='\e[0;33m' # Yellow
+# txtblu='\e[0;34m' # Blue
+# txtpur='\e[0;35m' # Purple
+# txtcyn='\e[0;36m' # Cyan
+# txtwht='\e[0;37m' # White
+# bldblk='\e[1;30m' # Black - Bold
+# unkblk='\e[4;30m' # Black - Underline
+# bakblk='\e[40m'   # Black - Background
+# txtrst='\e[0m'    # Text Reset
+
+ps_color=$'\e[1;44;30m' # blue bg
+
+if is_set "$IN_NIX_SHELL"; then
+    if file_exists ".ruby-version"; then
+        alias be='bundle exec'
+        PS_NIX_SHELL="[$(cat .ruby-version)] "
+    fi
+
+    # this is needed to get locales to work (for eg. postgres)
+    export LOCALE_ARCHIVE=/usr/lib/locale/locale-archive
+
+    ps_color=$'\e[1;46;30m' # cyan bg
+fi
+
+plain=$'\033[0m'
+
+# The %{ %} characters tell zsh not to count the escape characters in string length, which
+# fixes indentation during tab completion.
+export PS1="%{${ps_color}%}\$PS_NIX_SHELL%1~%{${plain}%} $ "
+
+
+### Aliases ###
+alias sudo='sudo ' # make aliases work with "sudo"
+
+alias rg='rg -i -M 500'
+alias rga='rg --no-ignore'
+alias rgall='rg -M 0 --no-ignore'
+
+alias e='TERM=xterm-24bit emacs -nw'
+alias t2='t -L 2'
+
+
+### Functions ###
+function pss() {
+    local process_names=$(echo $@ | sed 's/ /\\|/g')
+    ps aux | grep -v grep | grep "$process_names"
+}
+
+function lns() {
+    ls -la | grep '\->'
+}
+
+function shrug() {
+    echo -n '¯\_(ツ)_/¯' | xclip -selection clipboard && xsel --clipboard --output | xsel --clipboard --input
+}
+
+function show-colors() {
+    echo '40;30m: \e[40;30m                  \e[0m 0;30m: \e[0;30m  black           \e[0m'
+    echo '41;30m: \e[41;30m                  \e[0m 0;31m: \e[0;31m  red             \e[0m'
+    echo '42;30m: \e[42;30m                  \e[0m 0;32m: \e[0;32m  green           \e[0m'
+    echo '43;30m: \e[43;30m                  \e[0m 0;33m: \e[0;33m  yellow          \e[0m'
+    echo '44;30m: \e[44;30m                  \e[0m 0;34m: \e[0;34m  blue            \e[0m'
+    echo '45;30m: \e[45;30m                  \e[0m 0;35m: \e[0;35m  magenta         \e[0m'
+    echo '46;30m: \e[46;30m                  \e[0m 0;36m: \e[0;36m  cyan            \e[0m'
+    echo '47;30m: \e[47;30m                  \e[0m 0;37m: \e[0;37m  white           \e[0m'
+}
+
+function show-path() {
+    echo $PATH | tr ':' '\n'
+}
+
+function setup_npm() {
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+}
+
+function opam-env() {
+    eval $(opam env)
+    PS_OPAM_ENV=$(opam switch show)
+}
+
+
+### Extensions ###
+source $HOME/env/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
+
+# https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file
+source $HOME/env/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

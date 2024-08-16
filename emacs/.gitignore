@@ -1,0 +1,11 @@
+auto-save-list
+elpa/archives
+projectile-bookmarks.eld
+projectile.cache
+bookmarks
+.cache/
+.lsp-session-v1
+
+*.elc
+
+private.el

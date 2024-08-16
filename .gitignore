@@ -1,0 +1,10 @@
+.vagrant
+Vagrantfile
+.DS_Store
+boxes
+package.box
+*.swp
+
+zsh/history
+zsh/.emacs-pager-tmp*
+
