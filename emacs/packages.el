@@ -167,9 +167,12 @@
 (use-package cc-mode :defer t
   :config
   (setq-default c-basic-offset 2)
+  (add-hook 'c-mode-hook '%start-lsp)
   (add-hook 'cc-mode-hook '%start-lsp)
-  (setq comment-start "//")
-  (setq comment-end "")
+  (add-hook 'c-mode-hook (lambda ()
+                           (setq comment-start "//")
+                           (setq comment-end "")
+                           ))
 
   :bind
   (:map c++-mode-map
@@ -290,8 +293,10 @@
   ;; (setq lsp-completion-show-kind nil)
   (setq lsp-lens-enable nil)
   (setq lsp-enable-symbol-highlighting nil)
-
   )
+
+(use-package eldoc :defer t
+  :diminish)
 
 (use-package rust-mode :defer t
   :config

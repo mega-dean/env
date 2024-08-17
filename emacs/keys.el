@@ -716,9 +716,13 @@
  ;;; ---- compilation ---- ;;
   (defun %compile (command)
     (interactive)
-    (%save-layout)
-    (%maximize)
-    (compile command))
+    (if (get-buffer-window "*compilation*" 'visible)
+        (compile command)
+      (progn
+        (%save-layout)
+        (%maximize)
+        (compile command)
+        )))
 
   (defun %next-error ()
     (interactive)
@@ -791,6 +795,8 @@
     (interactive)
     (cond ((eq major-mode 'tuareg-mode)
            (merlin-locate))
+          ((lsp-mode)
+           (call-interactively 'lsp-find-definition))
           (t
            (call-interactively 'xref-find-definitions))
           ))
@@ -815,7 +821,6 @@
           ))
 
  ;;; ---- keys ---- ;;
-  ;; FIXME instead of separate functions, these could also use a cond
   (defun %set-last-function (func)
     (%log "setting last function")
     (setq %last-action-type 'function)
@@ -844,7 +849,6 @@
     (setq %last-until until-char)
     (setq %last-action action)
     )
-
 
   (setq %last-action-type nil)
 
