@@ -609,12 +609,18 @@
   (defalias '%flip-selection 'exchange-point-and-mark)
   (defun %flip-selection-and-adjust ()
     (interactive)
-    (if (> (point) (mark))
-        (%right))
-    (exchange-point-and-mark)
-    (if (> (point) (mark))
-        (%left))
-    )
+    (if %selection-line
+        (let ((old-selection-line %selection-line))
+          (%select-line)
+          (goto-line old-selection-line)
+          )
+      (progn
+        (if (> (point) (mark))
+            (%right))
+        (exchange-point-and-mark)
+        (if (> (point) (mark))
+            (%left))
+        )))
 
   (defmacro %defun-selection-fn (name fn)
     `(defun ,name ()
@@ -637,6 +643,16 @@
 
  ;;; ---- searching ---- ;;
   (defalias '%search 'isearch-forward-regexp)
+
+  (defun %next-search-result ()
+    (interactive)
+    (isearch-repeat-forward)
+    (run-with-timer 3 nil 'isearch-exit))
+
+  (defun %previous-search-result ()
+    (interactive)
+    (isearch-repeat-backward)
+    (run-with-timer 3 nil 'isearch-exit))
 
   (defun %search-project ()
     (interactive)
@@ -795,7 +811,7 @@
     (interactive)
     (cond ((eq major-mode 'tuareg-mode)
            (merlin-locate))
-          ((lsp-mode)
+          ((%lsp-on)
            (call-interactively 'lsp-find-definition))
           (t
            (call-interactively 'xref-find-definitions))
@@ -815,10 +831,13 @@
     (cond ((eq major-mode 'tuareg-mode)
            (merlin-type-enclosing))
           (t
-           (if (bound-and-true-p lsp-mode)
+           (if (%lsp-on)
                (lsp-describe-thing-at-point)
              (%log "can't show type")))
           ))
+
+  (defun %lsp-on ()
+    (bound-and-true-p lsp-mode))
 
  ;;; ---- keys ---- ;;
   (defun %set-last-function (func)
@@ -1062,7 +1081,7 @@
         ("f" . '%flip-selection-and-adjust) ("F" . '%noop)
 
         ("a" . '%add)           ("A" . '%add-bol-indent)
-        ("r" . '%repeat-action) ("R" . '%noop)
+        ("r" . '%repeat-action) ("R" . '%repeat-action)
         ("s" . '%select)        ("S" . '%select-line)
         ("T" . '%noop)
         ("g" . '%graft)         ("G" . 'xah%toggle-previous-letter-case)
@@ -1142,8 +1161,8 @@
         ("<deletechar>" . '%del)
 
         ("h" . '%left)   ("H" . '%noop)
-        ("n" . '%down)   ("N" . '%noop)
-        ("e" . '%up)     ("E" . '%noop)
+        ("n" . '%down)   ("N" . '%next-search-result)
+        ("e" . '%up)     ("E" . '%previous-search-result)
         ("i" . '%right)  ("I" . '%noop)
         ("o" . '%eow)    ("O" . '%eoW)
         ("'" . '%search) ("\"" . '%search)

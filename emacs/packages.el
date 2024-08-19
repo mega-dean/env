@@ -274,7 +274,11 @@
           ))
   )
 
-(use-package rubocop :after enh-ruby-mode)
+(use-package rubocop :defer t
+  :after enh-ruby-mode
+  :config
+  (setq rubocop-use-server t)
+  )
 
 (use-package lsp-mode :defer t
   :diminish
