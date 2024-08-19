@@ -644,15 +644,24 @@
  ;;; ---- searching ---- ;;
   (defalias '%search 'isearch-forward-regexp)
 
+  (defvar %search-result-timer nil)
+  (defun %clear-search-highlighting ()
+    (isearch-exit)
+    (message ""))
+
   (defun %next-search-result ()
     (interactive)
+    (when %search-result-timer
+      (cancel-timer %search-result-timer))
     (isearch-repeat-forward)
-    (run-with-timer 3 nil 'isearch-exit))
+    (setq %search-result-timer (run-with-timer 3 nil '%clear-search-highlighting)))
 
   (defun %previous-search-result ()
     (interactive)
+    (when %search-result-timer
+      (cancel-timer %search-result-timer))
     (isearch-repeat-backward)
-    (run-with-timer 3 nil 'isearch-exit))
+    (setq %search-result-timer (run-with-timer 3 nil '%clear-search-highlighting)))
 
   (defun %search-project ()
     (interactive)
