@@ -429,10 +429,11 @@
   (defun %drag-line-bw ()
     ;; neither save-excursion nor setting a marker was working here, probably because point moves
     (interactive)
-    (let ((col (current-column)))
-      (transpose-lines 1)
-      (%up 2)
-      (%right col)))
+    (when (not (eq 1 (line-number-at-pos)))
+      (let ((col (current-column)))
+        (transpose-lines 1)
+        (%up 2)
+        (%right col))))
 
   (defun %drag-line-fw ()
     (interactive)
@@ -651,17 +652,19 @@
 
   (defun %next-search-result ()
     (interactive)
-    (when %search-result-timer
-      (cancel-timer %search-result-timer))
-    (isearch-repeat-forward)
-    (setq %search-result-timer (run-with-timer 3 nil '%clear-search-highlighting)))
+    (when (not %selection-line)
+      (when %search-result-timer
+        (cancel-timer %search-result-timer))
+      (isearch-repeat-forward)
+      (setq %search-result-timer (run-with-timer 3 nil '%clear-search-highlighting))))
 
   (defun %previous-search-result ()
     (interactive)
-    (when %search-result-timer
-      (cancel-timer %search-result-timer))
-    (isearch-repeat-backward)
-    (setq %search-result-timer (run-with-timer 3 nil '%clear-search-highlighting)))
+    (when (not %selection-line)
+      (when %search-result-timer
+        (cancel-timer %search-result-timer))
+      (isearch-repeat-backward)
+      (setq %search-result-timer (run-with-timer 3 nil '%clear-search-highlighting))))
 
   (defun %search-project ()
     (interactive)
@@ -1126,7 +1129,7 @@
 
         ;; command
         ("SPC j" . '%justify-text)
-
+        ("SPC w" . '%save-layout)
         ("SPC L" . '%start-lsp)
         ("SPC b" . 'private%compile-build)
         ("SPC e" . 'private%compile-exec)
