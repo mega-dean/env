@@ -79,6 +79,10 @@
   (setq inhibit-startup-screen t)
   (setq inhibit-startup-buffer-menu t)
   (setq initial-scratch-message (concat "# " (replace-regexp-in-string " (.*\n.*" "" (emacs-version)) "\n\n"))
+  ;; these settings make rust-analyzer start more quickly
+  (setq gc-cons-threshold 100000000) ;; 100 MB
+  (setq read-process-output-max (* 1024 1024)) ;; 1 MB
+
 
   ;; file types
   (add-to-list 'auto-mode-alist '("\\.yml\\.example$" . yaml-mode))
@@ -102,6 +106,14 @@
   (global-unset-key (kbd "C-x C-i"))
   (global-unset-key (kbd "M-`"))
   (defun eshell () (interactive) ())
+
+  ;; These are overridden in mode hooks.
+  (setq %next-error-fn 'next-error)
+  (setq %previous-error-fn 'previous-error)
+  (setq %format-fn nil)
+  (setq %show-type-fn nil)
+  (setq %compile-build-command "")
+  (setq %compile-run-command "")
 
   (load "~/.emacs.d/packages.el")
   (load "~/.emacs.d/private.el")

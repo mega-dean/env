@@ -58,7 +58,6 @@
   (add-hook 'compilation-filter-hook 'gpt%colorize-compilation-buffer)
   )
 
-
 ;;---- external ----;;
 (use-package whole-line-or-region :diminish)
 (use-package expand-region :config (setq expand-region-fast-keys-enabled nil))
@@ -67,17 +66,17 @@
   :diminish
   :config
   (projectile-global-mode)
+  ;; This is needed for projectile-globally-ignored-directories to have an effect.
+  (setq projectile-indexing-method 'hybrid)
   (setq projectile-globally-ignored-directories
         '("node_modules"
           "app/assets"
           "tmp"
           "vendor"
-          ;; FIXME-8 this isn't working
-          "emacs/elpa/"
-          "src/raylib"
+          "emacs/elpa"
+          "vendor/raylib"
           "zig-out/"
           "zig-cache/"
-          ;; FIXME-8 these aren't working either
           "zsh/zsh-autosuggestions"
           "zsh/zsh-syntax-highlighting"))
   (setq projectile-globally-ignored-file-suffixes
@@ -173,6 +172,10 @@
                            (setq comment-start "//")
                            (setq comment-end "")
                            ))
+
+  (setq %compile-build-command "make -k")
+  (setq %compile-run-command "make -k run")
+  (setq %format-fn 'clang-format-buffer)
 
   :bind
   (:map c++-mode-map
@@ -275,6 +278,8 @@
           "before" "after"
           "let" "let!" "let_it_be"
           ))
+
+  (setq %format-fn 'rubocop-autocorrect-current-file)
   )
 
 (use-package rubocop :defer t
@@ -310,13 +315,25 @@
   (setq rust-format-on-save nil)
   (setq rust-indent-offset 2)
   (add-hook 'rust-mode-hook '%start-lsp)
+
+  (setq %compile-build-command "cargo clippy")
+  (setq %compile-run-command "cargo run")
+  (setq %compile-clippy-command "cargo clippy --fix --allow-dirty")
+  (setq %compile-tests-command "cargo test -- --show-output")
+  (setq %format-fn 'rust-format-buffer)
   )
 
 (use-package zig-mode :defer t
   :config
   (setq zig-format-on-save nil)
   (setq lsp-zig-zls-executable "~/.local/zls/zig-out/bin/zls")
-  (add-hook 'rust-mode-hook '%start-lsp)
+  (add-hook 'zig-mode-hook '%start-lsp)
+
+  (setq %compile-build-command "zig build")
+  (setq %compile-run-command "zig run")
+  (setq %compile-clippy-command "zig build")
+  (setq %format-fn 'zig-format-buffer)
+  (setq %compile-tests-command "zig build test")
   )
 
 (use-package tuareg :defer t
@@ -383,6 +400,11 @@
   (setq compilation-auto-jump-to-first-error t)
   (setq compilation-scroll-output t)
   (setq compilation-always-kill t)
+
+  (setq %next-error-fn 'merlin-error-next)
+  (setq %previous-error-fn 'merlin-error-prev)
+  (setq %format-fn 'ocamlformat)
+  (setq %show-type-fn 'merlin-type-enclosing)
 
   ;; menhir/ocamllex
   (add-to-list 'auto-mode-alist '("\\.mll\\'" . tuareg-mode))

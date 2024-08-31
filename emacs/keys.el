@@ -29,6 +29,11 @@
   (defun %log (&rest msgs)
     (message (apply 'concat msgs)))
 
+  (defun %call (fn)
+    (if fn
+        (funcall fn)
+      (%log "noop: fn " (symbol-name fn) " is nil")))
+
   (defun %git ()
     (interactive)
     (%save-layout)
@@ -48,7 +53,6 @@
  ;;; ---- modes ---- ;;
   (defun %add () (interactive) (modalka-mode -1))
   (defun %normal () (interactive) (modalka-mode) (%deselect) (%save))
-  (defun %normal-without-save () (interactive) (modalka-mode))
 
   (defun %save ()
     (interactive)
@@ -500,6 +504,7 @@
  ;;; ---- selecting text ---- ;;
   (defalias '%deselect 'deactivate-mark)
 
+  (setq %selection-line nil)
   (defun %select ()
     (interactive)
     (setq %selection-line nil)
@@ -752,71 +757,38 @@
         (compile command)
         )))
 
+  (defun %compile-build ()
+    (interactive)
+    (%compile %compile-build-command))
+
+  (defun %compile-run ()
+    (interactive)
+    (%compile %compile-run-command))
+
   (defun %next-error ()
     (interactive)
-    (cond ((eq major-mode 'tuareg-mode)
-           (merlin-error-next))
-          (t
-           (next-error))
-          ))
+    (%call %next-error-fn))
 
   (defun %previous-error ()
     (interactive)
-    (cond ((eq major-mode 'tuareg-mode)
-           (merlin-error-prev))
-          (t
-           (previous-error))
-          ))
+    (%call %previous-error-fn))
 
   (defun %run-tests ()
     (interactive)
-    (cond ((eq major-mode 'zig-mode)
-           (%compile "zig build test"))
-          ((eq major-mode 'rust-mode)
-           (%compile "cargo test -- --show-output"))
-          (t
-           (%log "run-tests unknown mode: " (symbol-name major-mode)))))
+    (%compile %run-tests-command))
 
   (defun %format-file ()
     (interactive)
-    (cond ((eq major-mode 'tuareg-mode)
-           (ocamlformat))
-          ((eq major-mode 'zig-mode)
-           (zig-format-buffer))
-          ((eq major-mode 'rust-mode)
-           (rust-format-buffer))
-          ((or (eq major-mode 'c++-mode)
-               (eq major-mode 'c-mode))
-           (clang-format-buffer))
-          ((eq major-mode 'enh-ruby-mode)
-           (rubocop-autocorrect-current-file))
-          (t
-           (save-excursion
-             (mark-whole-buffer)
-             (call-interactively 'indent-region)
-             ))
-          )
-    (%full-save))
+    (if %format-fn
+        (%call %format-fn)
+      (progn
+        (save-excursion
+          (mark-whole-buffer)
+          (call-interactively 'indent-region)))))
 
   (defun %clippy ()
     (interactive)
-    (cond ((eq major-mode 'rust-mode)
-           (compile "cargo clippy"))
-          ((eq major-mode 'enh-ruby-mode)
-           (rubocop-check-project))
-          (t
-           (private%compile-build)))
-    (%full-save))
-
-  (defun %clippy-fix ()
-    (interactive)
-    (cond ((eq major-mode 'rust-mode)
-           (compile "cargo clippy --fix --allow-dirty"))
-          ((eq major-mode 'enh-ruby-mode)
-           (rubocop-autocorrect-project))
-          (t
-           (%log "no clippy-fix for " major-mode)))
-    (%full-save))
+    (%compile %compile-clippy-command))
 
  ;;; ---- lsp ---- ;;
   (defun %go-to-definition ()
@@ -829,7 +801,12 @@
            (call-interactively 'xref-find-definitions))
           ))
 
-  (defalias '%autocomplete 'completion-at-point)
+  (defun %autocomplete ()
+    (interactive)
+    (if (%lsp-on)
+        (call-interactively 'completion-at-point)
+      (call-interactively 'dabbrev-expand)))
+
   (defun %start-lsp ()
     (interactive)
     (require 'lsp-mode)
@@ -837,36 +814,29 @@
     (%log "started LSP"))
 
   (defalias '%lsp-action 'lsp-execute-code-action)
-  (defalias '%show-type 'lsp-describe-thing-at-point)
+
   (defun %show-type ()
     (interactive)
-    (cond ((eq major-mode 'tuareg-mode)
-           (merlin-type-enclosing))
-          (t
-           (if (%lsp-on)
-               (lsp-describe-thing-at-point)
-             (%log "can't show type")))
-          ))
+    (if (%lsp-on)
+        (lsp-describe-thing-at-point)
+      (%call %show-type-fn)))
 
   (defun %lsp-on ()
     (bound-and-true-p lsp-mode))
 
  ;;; ---- keys ---- ;;
   (defun %set-last-function (func)
-    (%log "setting last function")
     (setq %last-action-type 'function)
     (setq %last-function func)
     )
 
   (defun %set-last-target-action (target action)
-    (%log "setting last target action")
     (setq %last-action-type 'target)
     (setq %last-target target)
     (setq %last-action action)
     )
 
   (defun %set-last-delimited-action (prefix-key i-or-o start-char action)
-    (%log "setting last delimited action")
     (setq %last-action-type 'delimited-target)
     (setq %last-prefix-key prefix-key)
     (setq %last-i-or-o i-or-o)
@@ -875,7 +845,6 @@
     )
 
   (defun %set-last-until-action (until-char action)
-    (%log "setting last until action")
     (setq %last-action-type 'until)
     (setq %last-until until-char)
     (setq %last-action action)
@@ -1131,15 +1100,15 @@
         ("SPC j" . '%justify-text)
         ("SPC w" . '%save-layout)
         ("SPC L" . '%start-lsp)
-        ("SPC b" . 'private%compile-build)
-        ("SPC e" . 'private%compile-exec)
         ("SPC t" . '%show-type)
-        ("SPC T" . '%run-tests)
         ("SPC l" . '%lsp-action)
-        ("SPC f" . '%format-file)
-        ("SPC c" . '%clippy)
-        ("SPC C" . '%clippy-fix)
         ("SPC d" . '%go-to-definition)
+
+        ("SPC b" . '%compile-build)
+        ("SPC r" . '%compile-run)
+        ("SPC c" . '%clippy)
+        ("SPC T" . '%run-tests)
+        ("SPC f" . '%format-file)
 
         ("SPC =" . 'so%increment-next-number)
         ("SPC -" . 'so%decrement-next-number)
@@ -1159,7 +1128,6 @@
         ("|t" . '%rect-trade)
         ("|w" . '%rect-wipe)
         ("|p" . '%rect-paste)
-        ("j" . '%bol-indent) ("J" . '%join-line-below)
 
         ("`" . 'pop-global-mark)     ("~" . 'helm-all-mark-rings)
         ("(" . 'pop-to-mark-command) (")" . '%cycle-spacing)
@@ -1168,6 +1136,7 @@
         ("l" . '%bw-bow) ("L" . '%bw-boW)
         ("u" . '%undo)   ("U" . '%undo-tree)
         ("y" . '%fw-bow) ("Y" . '%fw-boW)
+        ("k" . '%redo) ("K" . '%noop)
         (":" . '%redo)
 
         ("<deletechar>" . '%del)
@@ -1179,7 +1148,7 @@
         ("o" . '%eow)    ("O" . '%eoW)
         ("'" . '%search) ("\"" . '%search)
 
-        ("k" . '%redo) ("K" . '%undo-tree)
+        ("j" . '%bol-indent) ("J" . '%join-line-below)
         ("m" . '%bop)  ("M" . '%scroll-up-page)
         ("DEL" . '%bs)
         ("." . '%eop)  (">" . '%scroll-down-page)
