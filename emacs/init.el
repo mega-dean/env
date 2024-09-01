@@ -129,7 +129,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(rubocop nix-mode clang-format cargo-mode rust-mode typescript-mode lsp-mode glsl-mode zig-mode lua-mode enh-ruby-mode yasnippet terraform-mode whole-line-or-region web-mode org helm-projectile))
+   '(helm-company company rubocop nix-mode clang-format cargo-mode rust-mode typescript-mode lsp-mode glsl-mode zig-mode lua-mode enh-ruby-mode yasnippet terraform-mode whole-line-or-region web-mode org helm-projectile))
  '(warning-suppress-types '((use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

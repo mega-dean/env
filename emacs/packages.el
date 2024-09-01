@@ -159,6 +159,17 @@
   (setq undo-tree-auto-save-history nil)
   )
 
+(use-package helm-company
+  :diminish)
+
+(use-package company-mode
+  :diminish
+  :hook (prog-mode . company-mode)
+
+  :init
+  (setq company-idle-delay nil)
+  )
+
 
 ;;---- deferred ----;;
 (use-package abbrev :defer t :diminish)

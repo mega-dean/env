@@ -805,7 +805,7 @@
     (interactive)
     (if (%lsp-on)
         (call-interactively 'completion-at-point)
-      (call-interactively 'dabbrev-expand)))
+      (call-interactively 'helm-company)))
 
   (defun %start-lsp ()
     (interactive)
