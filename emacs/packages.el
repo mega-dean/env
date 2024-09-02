@@ -162,7 +162,7 @@
 (use-package helm-company
   :diminish)
 
-(use-package company-mode
+(use-package company
   :diminish
   :hook (prog-mode . company-mode)
 

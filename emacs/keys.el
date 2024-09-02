@@ -93,16 +93,19 @@
     (interactive)
     (jump-to-register ?l))
 
+  (defun %go-to-compilation-log ()
+    (interactive)
+    (let ((compilation-window (get-buffer-window "*compilation*" 'visible)))
+      (if compilation-window
+          (select-window compilation-window)
+        (%go-to-buffer "*compilation*")))
+
  ;;; ---- buffers ---- ;;
   (defalias '%open-file 'helm-projectile-find-file)
   (defalias '%buffer-list 'ibuffer)
   (defalias '%go-to-buffer 'switch-to-buffer)
   (defalias '%find-open-buffer 'helm-projectile-switch-to-buffer)
   (defalias '%dired 'dired-jump)
-
-  (defun %go-to-compilation-log ()
-    (interactive)
-    (%go-to-buffer "*compilation*"))
 
   (defun %go-to-scratch ()
     (interactive)
@@ -1087,6 +1090,7 @@
         ("? '" . '%help-search)
         ("? s" . '%help-syntax-highlighting)
         ("? v" . '%help-variable)
+        ("? f" . 'describe-face)
         ("? c" . 'gpt%show-cursor-position)
 
         ;; modifier
