@@ -129,6 +129,12 @@
     (interactive)
     (shell-command (concat "echo -n " (%filepath-from-root) " | " %copy-to-clipboard)))
 
+  (defun %copy-file-and-line-number ()
+    (interactive)
+    (let ((path (concat (%filepath-from-root) ":" (number-to-string (line-number-at-pos)))))
+      (shell-command (concat "echo -n " path " | " %copy-to-clipboard))
+      (%log "copied '" path "'")))
+
   (defun %filepath-from-root ()
     (replace-regexp-in-string (regexp-quote (projectile-project-root)) "" (buffer-file-name) nil 'literal))
 
@@ -801,11 +807,7 @@
            (call-interactively 'xref-find-definitions))
           ))
 
-  (defun %autocomplete ()
-    (interactive)
-    (if (%lsp-on)
-        (call-interactively 'completion-at-point)
-      (call-interactively 'helm-company)))
+  (defalias '%autocomplete 'helm-company)
 
   (defun %start-lsp ()
     (interactive)
@@ -1102,6 +1104,7 @@
         ("SPC L" . '%start-lsp)
         ("SPC t" . '%show-type)
         ("SPC l" . '%lsp-action)
+        ("SPC SPC l" . '%copy-file-and-line-number)
         ("SPC d" . '%go-to-definition)
 
         ("SPC b" . '%compile-build)
