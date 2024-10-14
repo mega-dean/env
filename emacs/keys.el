@@ -51,8 +51,18 @@
       (deactivate-mark)))
 
  ;;; ---- modes ---- ;;
-  (defun %add () (interactive) (modalka-mode -1))
-  (defun %normal () (interactive) (modalka-mode) (%deselect) (%save))
+  ;; The `send-string-to-terminal' calls tell kitty to alternate between block and beam cursor.
+  (defun %add ()
+    (interactive)
+    (modalka-mode -1)
+    (send-string-to-terminal "\033[6 q"))
+
+  (defun %normal ()
+    (interactive)
+    (modalka-mode)
+    (%deselect)
+    (%save)
+    (send-string-to-terminal "\033[2 q"))
 
   (defun %save ()
     (interactive)
@@ -98,7 +108,7 @@
     (let ((compilation-window (get-buffer-window "*compilation*" 'visible)))
       (if compilation-window
           (select-window compilation-window)
-        (%go-to-buffer "*compilation*")))
+        (%go-to-buffer "*compilation*"))))
 
  ;;; ---- buffers ---- ;;
   (defalias '%open-file 'helm-projectile-find-file)
@@ -321,6 +331,7 @@
   (defun %wipe-line ()
     (interactive)
     (%select-target "ol")
+    (redisplay)
     (%wipe))
 
   (defun %paste-eol ()
@@ -331,22 +342,26 @@
   (defun %vanish-eol ()
     (interactive)
     (%select-eol)
+    (redisplay)
     (%vanish))
 
   (defun %dupe-eol ()
     (interactive)
     (%select-eol)
+    (redisplay)
     (%dupe))
 
   (defun %wipe-eol ()
     (interactive)
     (when (not (eolp))
       (%select-eol)
+      (redisplay)
       (%wipe)))
 
   (defun %become-eol ()
     (interactive)
     (%select-eol)
+    (redisplay)
     (%become))
 
   (defmacro %defun-add (fn original)
@@ -363,8 +378,15 @@
 
   (defun %newline-here ()
     (interactive)
-    (newline-and-indent)
+    (if (nth 4 (syntax-ppss)) ; Checks if the point is inside a comment
+        (comment-indent-new-line)
+      (newline-and-indent))
     (%add))
+
+  (defun %newline-below ()
+    (interactive)
+    (%eol)
+    (%newline-here))
 
   (defun %join-line-below ()
     (interactive)
@@ -784,7 +806,7 @@
 
   (defun %run-tests ()
     (interactive)
-    (%compile %run-tests-command))
+    (%compile %compile-tests-command))
 
   (defun %format-file ()
     (interactive)
@@ -793,7 +815,8 @@
       (progn
         (save-excursion
           (mark-whole-buffer)
-          (call-interactively 'indent-region)))))
+          (call-interactively 'indent-region))))
+    (message ""))
 
   (defun %clippy ()
     (interactive)
@@ -810,7 +833,7 @@
            (call-interactively 'xref-find-definitions))
           ))
 
-  (defalias '%autocomplete 'helm-company)
+  (defalias '%autocomplete 'company-complete)
 
   (defun %start-lsp ()
     (interactive)
@@ -1027,6 +1050,8 @@
         ("M-." . '%eop)             ("M->" . '%scroll-down-page)
         ("M--" . '%eol)             ("C-_" . '%eol)
 
+        ("M-*" . '%newline-below)
+
         :map modalka-mode-map
         ("RET" . '%newline-here)
 
@@ -1131,6 +1156,7 @@
         ("=" .'%comment)
         ("+" . '%comment-par)
 
+        ("SPC |" . 'align-regexp)
         ("|a" . '%rect-add)
         ("|t" . '%rect-trade)
         ("|w" . '%rect-wipe)
@@ -1165,22 +1191,5 @@
   :config
   (add-hook 'text-mode-hook #'modalka-mode)
   (add-hook 'prog-mode-hook #'modalka-mode)
-
-  (defun %set-mode-colors ()
-    ;; (rainbow-mode)
-    (let* ((colors (cond (modalka-mode '("#bce" "#888" "#141414"))
-                         (t            '("#c88" "#a89" "#181114"))))
-           (mode-line-active-bg (car colors))
-           (line-number-fg (cadr colors))
-           (line-number-bg (caddr colors))
-           )
-      (set-face-background 'mode-line mode-line-active-bg)
-      (set-face-foreground 'line-number line-number-fg)
-      (set-face-background 'line-number line-number-bg)
-      ))
-
-  (define-key global-map (kbd "C-M-x") ctl-x-map)
-
   (add-hook 'post-command-hook '%adjust-selection-hook)
-  (add-hook 'modalka-mode-hook '%set-mode-colors)
   )

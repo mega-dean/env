@@ -44,7 +44,7 @@
 
   (setq whitespace-display-mappings
         '((newline-mark 10 [182 10]) ; LINE FEED,
-          (tab-mark 9 [8677 9] [92 9]) ; tab
+          ;; (tab-mark 9 [8677 9] [92 9]) ; tab
           ))
   (global-whitespace-mode)
   )
@@ -159,9 +159,6 @@
   (setq undo-tree-auto-save-history nil)
   )
 
-(use-package helm-company
-  :diminish)
-
 (use-package company
   :diminish
   :hook (prog-mode . company-mode)
@@ -182,6 +179,7 @@
   (add-hook 'c-mode-hook (lambda ()
                            (setq comment-start "//")
                            (setq comment-end "")
+                           (c-set-offset 'case-label '+)
                            ))
 
   (setq %compile-build-command "make -k")
@@ -341,7 +339,7 @@
   (add-hook 'zig-mode-hook '%start-lsp)
 
   (setq %compile-build-command "zig build")
-  (setq %compile-run-command "zig run")
+  (setq %compile-run-command "zig build run")
   (setq %compile-clippy-command "zig build")
   (setq %format-fn 'zig-format-buffer)
   (setq %compile-tests-command "zig build test")
@@ -430,6 +428,7 @@
         ("Q" . (lambda () (interactive)
                  (call-interactively 'magit-mode-bury-buffer)
                  (%restore-layout)
+                 (%normal)
                  ))
         ("M-RET" . 'magit-diff-visit-worktree-file)
         )
