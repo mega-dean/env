@@ -337,7 +337,7 @@
 (use-package zig-mode :defer t
   :config
   (setq zig-format-on-save nil)
-  (setq lsp-zig-zls-executable "~/.local/zls/zig-out/bin/zls")
+  (setq lsp-zig-zls-executable "~/.local/chzig/bin/zls")
   (add-hook 'zig-mode-hook '%start-lsp)
 
   (setq %compile-build-command "zig build")

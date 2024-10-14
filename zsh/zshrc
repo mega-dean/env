@@ -212,7 +212,7 @@ function show-path() {
     echo $PATH | tr ':' '\n'
 }
 
-function setup_npm() {
+function setup-npm() {
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
@@ -223,6 +223,7 @@ function opam-env() {
     PS_OPAM_ENV=$(opam switch show)
 }
 
+source $HOME/env/zsh/chzig.sh
 
 ### Extensions ###
 source $HOME/env/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
