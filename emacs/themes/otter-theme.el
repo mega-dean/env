@@ -5,40 +5,33 @@
 (deftheme otter
   "originally copied from badger-theme.el")
 
-(setq %bg "#212121")
+(setq %bg "#222")
 (setq %bg-darker "#111")
 (setq %bg-dark "#181818")
-(setq %bg-gray "#222")
 (setq %bg-light "#282828")
 (setq %bg-lighter "#333")
 (setq %bg-strong "#555")
 (setq %bg-weak "#333")
 
-(setq %fg "#dde2e7") ; 90
+(setq %separator "#444")
+(setq %separator-fg "#111")
+
+(setq %line-nr-fg "#555")
+(setq %line-nr-bg "#111")
+(setq %mode-line-bg "#bce")
+
+(setq %fg "#dbdbdb")
 (setq %fg-darker "#ddd")
-(setq %fg-dark "#d8d8d8")
-(setq %fg-gray "#eee")
-(setq %fg-light "#e8e8e8")
-(setq %fg-strong "#fff")
 (setq %fg-weak "#888")
 
 (setq %black "#1a202c")
 (setq %red "#dca8a8")
-(setq %green "#9bcead")
+(setq %green "#8eb6a1")
 (setq %yellow "#ddd2ae")
-(setq %blue "#90b9d1")
-(setq %magenta "#c3b0e0")
-(setq %cyan "#7cd0c5")
+(setq %blue "#97b3c4")
+(setq %magenta "#ab9ebf")
+(setq %cyan "#93c6c0")
 (setq %white "#cdd2d7")
-
-;; (setq %black "#1a202c")
-;; (setq %red "#fe8181")
-;; (setq %green "#97e7b3")
-;; (setq %yellow "#ffeac6")
-;; (setq %blue "#8ecef5")
-;; (setq %magenta "#d6befc")
-;; (setq %cyan "#7de7d9")
-;; (setq %white "#dde2e7")
 
 (setq %brightblack "#051610")
 (setq %brightred "#f76665")
@@ -56,23 +49,22 @@
 (setq %deepmagenta "#626")
 (setq %deepcyan "#055")
 
-
 (setq %hl-weak "#112233")
-(setq %hl "#234")
+(setq %hl "#245")
 (setq %hl-strong "#345")
 (setq %hl-stronger "#456")
 
 (setq %hl-selection %deepgreen)
-(setq %hl-cursor %deepred)
+(setq %hl-cursor %deepmagenta)
 
 (setq %black0 "#000")
 (setq %gray1 "#111")
 (setq %gray2 "#222")
 (setq %gray3 "#333")
-(setq %gray4 "#444")
+(setq %gray4 "#445")
 (setq %gray5 "#555")
 (setq %gray6 "#666")
-(setq %gray7 "#777") ; 50
+(setq %gray7 "#777")
 (setq %gray8 "#888")
 (setq %gray9 "#999")
 (setq %graya "#aaa")
@@ -82,22 +74,21 @@
 (setq %graye "#eee")
 (setq %whitef "#fff")
 
-;; (defmacro face%build (name &rest config)
-;;   `(defface ,name
-;;      '((t ,config))
-;;      ""
-;;      :group '%core)
-;;   )
+(defface my-paren-face
+  '((t :foreground "#999"))
+  "Face for parentheses and brackets.")
 
-;; (defmacro face%create (name fg bg)
-;;   `(face%build ,name :foreground ,fg :background ,bg))
+(defun gpt%highlight-parentheses-brackets ()
+  "Highlight [, ], (, ), {, } characters with a custom face."
+  (font-lock-add-keywords nil
+   '(("[][(){}]" . 'my-paren-face))))
 
-;; (defmacro face%inherit (parent name &rest overrides)
-;;   `(face%build ,name :inherit ,parent ,@overrides))
+(add-hook 'prog-mode-hook 'gpt%highlight-parentheses-brackets)
+
 
 (defface todo-comment
   '((t :foreground "#222"
-       :background "#447"
+       :background "#335"
        :weight bold
        ))
   "Face for subtle todo highlighting"
@@ -105,7 +96,7 @@
 
 (defface fixme-comment
   '((t :foreground "#222"
-       :background "#252"
+       :background "#242"
        :weight bold
        ))
   "Face for subtle todo highlighting"
@@ -116,9 +107,7 @@
  'otter
 
  `(default ((t (:foreground ,%fg :background ,%bg))))
- ;; `(line-number ((t (:foreground ,%fg-weak :background ,%bg-dark)))) ;; set in modalka-keys.el
- `(line-number-current-line ((t (:inherit line-number :underline t))))
- ;; `(linum ((t (:foreground ,%fg-weak :background ,%bg-dark))))
+ ;; `(line-number-current-line ((t (:inherit line-number :underline t))))
  `(region ((t (:background ,%hl))))
 
  `(isearch ((t (:background ,%hl-cursor)))) ;; match at cursor
@@ -133,25 +122,24 @@
  `(whitespace-newline ((t (:foreground ,%bg :background ,%bg))))
  `(whitespace-trailing ((t (:inherit error))))
 
- ;; `(mode-line ((t (:background ,%green :foreground ,%magenta ))))
- ;; `(mode-line-inactive ((t (:background ,%gray8 :foreground ,%white ))))
- ;; `(mode-line-active ((t (:foreground "#000"))))
- `(mode-line-inactive ((t (:foreground "#000" :background ,%gray4))))
- `(vertical-border ((t (:foreground ,%gray4 :background ,%gray4))))
+ `(line-number ((t (:foreground ,%line-nr-fg :background ,%line-nr-bg))))
+ `(mode-line-active ((t (:foreground ,%black0 :background ,%mode-line-bg))))
+ `(mode-line-inactive ((t (:foreground ,%separator-fg :background ,%separator))))
+ `(vertical-border ((t (:foreground ,%separator :background ,%separator))))
  `(mode-line-buffer-id ((t (:foreground ,%white :weight bold))))
  `(minibuffer-prompt ((t (:foreground ,%cyan))))
 
- `(font-lock-comment-delimiter-face ((t (:foreground ,%gray5))))
- `(font-lock-comment-face ((t (:foreground ,%gray5))))
+ `(font-lock-comment-delimiter-face ((t (:foreground ,%gray5 :italic t))))
+ `(font-lock-comment-face ((t (:foreground ,%gray5 :italic t))))
  `(font-lock-doc-face ((t (:foreground ,%gray6))))
- `(font-lock-negation-char-face ((t (:foreground ,%red))))
- `(font-lock-preprocessor-face ((t (:foreground ,%magenta))))
- `(font-lock-builtin-face ((t (:foreground ,%cyan))))
+ `(font-lock-negation-char-face ((t (:foreground ,%cyan :bold t))))
+ `(font-lock-preprocessor-face ((t (:foreground ,%gray9))))
+ `(font-lock-builtin-face ((t (:inherit font-lock-keyword-face))))
  `(font-lock-variable-name-face ((t (:inherit default))))
- `(font-lock-function-name-face ((t (:foreground ,%red))))
- `(font-lock-string-face ((t (:foreground ,%yellow))))
- `(font-lock-constant-face ((t (:foreground ,%blue))))
- `(font-lock-type-face ((t (:foreground ,%green))))
+ `(font-lock-function-name-face ((t (:foreground ,%green))))
+ `(font-lock-string-face ((t (:foreground ,%magenta))))
+ `(font-lock-constant-face ((t (:foreground ,%cyan))))
+ `(font-lock-type-face ((t (:foreground ,%blue))))
  `(font-lock-keyword-face ((t (:foreground ,%gray9))))
  `(button ((t (:foreground ,%cyan :underline t))))
 
@@ -192,6 +180,8 @@
  ;; current section
  `(diff-refine-removed ((t (:foreground ,%brightred :background ,%hl-weak))))
  `(diff-refine-added ((t (:foreground ,%brightgreen :background ,%hl-weak))))
+
+ `(lsp-face-highlight-textual ((t (:inherit isearch))))
 
 
 ;;;;; magit
@@ -323,7 +313,7 @@
             (font-lock-add-keywords
              nil
              '(
-               ("\\<\\(FIXME\\|POLISH\\)" 1 'fixme-comment prepend)
+               ("\\<\\(FIXME\\|CLEANUP\\)" 1 'fixme-comment prepend)
                ("\\<\\(TODO\\)" 1 'todo-comment prepend)
                )
              )))
@@ -335,6 +325,7 @@
 
 (add-hook 'yaml-mode-hook 'color-variable-name-face)
 (add-hook 'web-mode-hook 'color-variable-name-face)
+(add-hook 'conf-mode-hook 'color-variable-name-face)
 (add-hook 'enh-ruby-mode-hook (lambda ()
                                 (color-variable-name-face)
                                 (face-remap-add-relative 'font-lock-builtin-face nil :inherit font-lock-keyword-face)

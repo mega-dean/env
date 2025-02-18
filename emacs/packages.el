@@ -343,6 +343,11 @@
   (setq %compile-clippy-command "zig build")
   (setq %format-fn 'zig-format-buffer)
   (setq %compile-tests-command "zig build test")
+
+  (defun %test-this-file ()
+    (interactive)
+    (setq %compile-tests-command (concat "zig test " (buffer-name)))
+    (%log "testing " (buffer-name)))
   )
 
 (use-package tuareg :defer t

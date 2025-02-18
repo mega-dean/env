@@ -116,6 +116,18 @@ usage:
 
                         ;;
 
+                    uninstall)
+                        local TARGET_VERSION=$2
+                        local TARGET_DIR=$CHZIG_ZIG_INSTALLS/$TARGET_VERSION
+
+                        if [[ -d $TARGET_DIR ]]; then
+                            print_run "uninstalling zig $(print_blue $TARGET_VERSION)"
+                            rm -rf $TARGET_DIR
+                        else
+                            print_info "zig $(print_blue $TARGET_VERSION) is not currently installed"
+                        fi
+                        ;;
+
                     list|ls|status)
                         for dir in $CHZIG_ZIG_INSTALLS/*; do
                             local dir_version="${dir##*/}"

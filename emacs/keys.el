@@ -528,9 +528,9 @@
     (interactive)
     (%insert-comment "FIXME "))
 
-  (defun %insert-polish-comment ()
+  (defun %insert-cleanup-comment ()
     (interactive)
-    (%insert-comment "POLISH "))
+    (%insert-comment "CLEANUP "))
 
  ;;; ---- selecting text ---- ;;
   (defalias '%deselect 'deactivate-mark)
@@ -849,6 +849,11 @@
         (lsp-describe-thing-at-point)
       (%call %show-type-fn)))
 
+  (defun %show-symbol ()
+    (interactive)
+    (if (%lsp-on)
+        (lsp-document-highlight)))
+
   (defun %lsp-on ()
     (bound-and-true-p lsp-mode))
 
@@ -895,6 +900,7 @@
   (defun %execute-target-action (target action)
     (save-excursion
       (%select-target target)
+      (redisplay)
       (funcall action))
     )
 
@@ -902,6 +908,7 @@
     (save-excursion
       (set-mark-command nil)
       (funcall '%until until-char)
+      (redisplay)
       (funcall action))
     )
 
@@ -911,6 +918,7 @@
              (if (string= i-or-o "i")
                  (%select-inside start-char)
                (%select-outside start-char))
+             (redisplay)
              (funcall action))))
       (if (string= prefix-key "c")
           (save-excursion (funcall run-cmd))
@@ -990,12 +998,12 @@
         ("M-q M-m" . '%maximize)
         ("M-q SPC" . '%dired)
 
-        ("M-SPC M-c" . '%insert-blank-comment)
+        ("M-SPC M-c" . '%insert-cleanup-comment)
         ("M-SPC M-t" . '%insert-todo-comment)
         ("M-SPC M-f" . '%insert-fixme-comment)
-        ("M-SPC M-p" . '%insert-polish-comment)
+        ("M-SPC M-b" . '%insert-blank-comment)
 
-        ("M-SPC ?" . '%help)
+        ("M-SPC h" . '%help)
 
         ("M-SPC z" . '%bob)
         ("M-SPC -" . '%eob)
@@ -1132,6 +1140,7 @@
         ("SPC w" . '%save-layout)
         ("SPC L" . '%start-lsp)
         ("SPC t" . '%show-type)
+        ("SPC s" . '%show-symbol)
         ("SPC l" . '%lsp-action)
         ("SPC SPC l" . '%copy-file-and-line-number)
         ("SPC d" . '%go-to-definition)
@@ -1140,6 +1149,7 @@
         ("SPC r" . '%compile-run)
         ("SPC c" . '%clippy)
         ("SPC T" . '%run-tests)
+        ("SPC SPC T" . '%test-this-file)
         ("SPC f" . '%format-file)
 
         ("SPC =" . 'so%increment-next-number)
